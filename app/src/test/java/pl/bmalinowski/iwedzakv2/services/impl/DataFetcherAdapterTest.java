@@ -14,7 +14,6 @@ class DataFetcherAdapterTest {
 
 
     @Test
-//    @DisplayName("1 + 1 = 2")
     void parseResponseTest() {
         final DataFetcherAdapter sut = new DataFetcherAdapter(null);
 

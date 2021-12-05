@@ -46,9 +46,14 @@ class DataFetcherAdapter implements DataFetcherPort {
             final String[] duration = extractStringFor(prefix, text)
                     .orElseThrow(RuntimeException::new)
                     .split(":");
-
-            return Duration.ofMinutes(Integer.parseInt(duration[0]))
-                    .plus(Duration.ofSeconds(Integer.parseInt(duration[1])));
+            if (duration.length == 3) {
+                return Duration.ofHours(Integer.parseInt(duration[0]))
+                        .plus(Duration.ofMinutes(Integer.parseInt(duration[1])))
+                        .plus(Duration.ofSeconds(Integer.parseInt(duration[2])));
+            } else {
+                return Duration.ofMinutes(Integer.parseInt(duration[0]))
+                        .plus(Duration.ofSeconds(Integer.parseInt(duration[1])));
+            }
         } catch (final Exception e) {
             return Duration.of(-1, ChronoUnit.SECONDS);
         }
