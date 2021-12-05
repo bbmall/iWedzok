@@ -51,7 +51,5 @@ class NotificationAdapter implements NotificationPort {
         final NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
         notificationManager.createNotificationChannel(mChannel);
         notificationManager.notify(requestCode, notificationBuilder.build());
-
-//        Log.d("showNotification", "showNotification: " + reqCode);
     }
 }

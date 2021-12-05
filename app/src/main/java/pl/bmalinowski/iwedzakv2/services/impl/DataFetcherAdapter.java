@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pl.bmalinowski.iwedzakv2.model.SensorsDTO;
+import pl.bmalinowski.iwedzakv2.model.Payload;
 import pl.bmalinowski.iwedzakv2.model.URL;
 import pl.bmalinowski.iwedzakv2.services.DataFetcherPort;
 
@@ -24,7 +24,7 @@ class DataFetcherAdapter implements DataFetcherPort {
     }
 
     @Override
-    public Optional<SensorsDTO> collectData(final URL URL) {
+    public Optional<Payload> collectData(final URL URL) {
         final Optional<String> responseOpt = apiClient.getCurrentSmokingHouseState(URL);
         if (responseOpt.isPresent()) {
             final String response = responseOpt.get();
@@ -32,7 +32,7 @@ class DataFetcherAdapter implements DataFetcherPort {
             final int temp2 = extractNumberFor(TEMP_2_PREFIX, response);
             final Duration duration = extractDurationFor(TIME_PREFIX, response);
 
-            return Optional.of(new SensorsDTO(temp1, temp2, duration));
+            return Optional.of(new Payload(temp1, temp2, duration));
         }
         return Optional.empty();
     }
@@ -46,9 +46,14 @@ class DataFetcherAdapter implements DataFetcherPort {
             final String[] duration = extractStringFor(prefix, text)
                     .orElseThrow(RuntimeException::new)
                     .split(":");
-
-            return Duration.ofMinutes(Integer.parseInt(duration[0]))
-                    .plus(Duration.ofSeconds(Integer.parseInt(duration[1])));
+            if (duration.length == 3) {
+                return Duration.ofHours(Integer.parseInt(duration[0]))
+                        .plus(Duration.ofMinutes(Integer.parseInt(duration[1])))
+                        .plus(Duration.ofSeconds(Integer.parseInt(duration[2])));
+            } else {
+                return Duration.ofMinutes(Integer.parseInt(duration[0]))
+                        .plus(Duration.ofSeconds(Integer.parseInt(duration[1])));
+            }
         } catch (final Exception e) {
             return Duration.of(-1, ChronoUnit.SECONDS);
         }
