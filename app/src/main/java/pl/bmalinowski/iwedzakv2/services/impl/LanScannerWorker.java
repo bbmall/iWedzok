@@ -77,8 +77,8 @@ class LanScannerWorker implements LanScannerPort {
         };
         ipRequest.setShouldCache(false);
         ipRequest.setRetryPolicy(new DefaultRetryPolicy(
-                200,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                50,
+                0,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         queue.add(ipRequest);

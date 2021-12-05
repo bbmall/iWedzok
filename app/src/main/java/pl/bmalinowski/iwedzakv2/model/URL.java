@@ -1,5 +1,8 @@
 package pl.bmalinowski.iwedzakv2.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,6 +11,11 @@ import lombok.Value;
 @Value
 public class URL {
     String value;
+
+    @JsonCreator
+    public URL(@JsonProperty("value") final String value) {
+        this.value = value;
+    }
 
     public static URL parseOrNull(final String value) {
 

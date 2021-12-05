@@ -1,5 +1,8 @@
 package pl.bmalinowski.iwedzakv2.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
@@ -7,12 +10,20 @@ import java.time.LocalTime;
 import lombok.Value;
 
 @Value
-//TODO Nazwa jest z dupy :)
-public class SensorsDTO {
+public class Payload {
+    Instant currentTime;
     Integer temp1;
     Integer temp2;
     Duration duration;
-    Instant currentTime = Instant.now();
+
+    @JsonCreator
+    public Payload(@JsonProperty("temp1") final Integer temp1, @JsonProperty("temp2") final Integer temp2,
+                   @JsonProperty("duration") final Duration duration) {
+        this.temp1 = temp1;
+        this.temp2 = temp2;
+        this.duration = duration;
+        this.currentTime = Instant.now();
+    }
 
     public LocalTime durationAsLocalTime() {
         return LocalTime.of((int) duration.toHours(),

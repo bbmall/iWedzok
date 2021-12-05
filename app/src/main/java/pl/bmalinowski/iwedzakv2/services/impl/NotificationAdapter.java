@@ -73,7 +73,7 @@ class NotificationAdapter extends Service implements NotificationPort {
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
         super.onStartCommand(intent, flags, startId);
 //        executor.
-        
+
         return START_STICKY;
     }
 
