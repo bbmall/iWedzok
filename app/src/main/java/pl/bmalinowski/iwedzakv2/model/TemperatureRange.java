@@ -8,6 +8,10 @@ public class TemperatureRange {
     int maxTemp;
 
     public boolean inRange(final int temp) {
-        return temp < minTemp || temp > maxTemp;
+        return minTemp <= temp && temp <= maxTemp;
+    }
+
+    public static TemperatureRange defaultRange() {
+        return new TemperatureRange(45, 65);
     }
 }

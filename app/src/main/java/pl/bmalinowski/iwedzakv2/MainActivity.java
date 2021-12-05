@@ -1,14 +1,23 @@
 package pl.bmalinowski.iwedzakv2;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -40,17 +49,37 @@ public class MainActivity extends AppCompatActivity {
     private EditText nbAlarmTo;
     private Instant tempNotificationSendTime;
     private Instant timeNotificationSendTime;
-    //service: https://stackoverflow.com/a/39675175/6760468
+    private BroadcastReceiver urlBroadcastReceiver;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initClass();
+
         final SwitchCompat switchCompat = findViewById(R.id.debugSwitch);
         switchCompat.setOnCheckedChangeListener((t, checked) -> findAndSetSmokingHouseIp());
-        supplyData();
+
+//        supplyData();
+
+        final Intent serviceIntent = new Intent(this, NotificationService.class);
+        startForegroundService(serviceIntent);
+        registerReceiver();
     }
+
+    private void registerReceiver() {
+        urlBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+                final String otpCode = intent.getStringExtra("com.an.sms.example.otp");
+
+                Log.i("Notification", otpCode);
+            }
+        };
+        registerReceiver(urlBroadcastReceiver, new IntentFilter("com.an.sms.example"));
+    }
+
 
     private void initClass() {
         serviceFactory = new ServiceFactory(this);
@@ -60,6 +89,31 @@ public class MainActivity extends AppCompatActivity {
         txtIp = findViewById(R.id.txtIp);
         nbAlarmFrom = findViewById(R.id.nbAlarmFrom);
         nbAlarmTo = findViewById(R.id.nbAlarmTo);
+        //register handlers
+        nbAlarmFrom.setOnKeyListener(getOnKeyListener());
+        nbAlarmTo.setOnKeyListener(getOnKeyListener());
+    }
+
+    @NonNull
+    private View.OnKeyListener getOnKeyListener() {
+        return (view, keyCode, event) -> {
+            try {
+                final String tempRangeJson = OBJECT_MAPPER.writeValueAsString(new TemperatureRange(
+                                Integer.parseInt(nbAlarmFrom.getText().toString()),
+                                Integer.parseInt(nbAlarmTo.getText().toString())
+                        )
+                );
+                final Intent in = new Intent(TemperatureRange.class.getName());
+                final Bundle extras = new Bundle();
+                extras.putString("json", tempRangeJson);
+                in.putExtras(extras);
+                getBaseContext().sendBroadcast(in);
+            } catch (final NumberFormatException | JsonProcessingException exc) {
+                Log.e("System.err", "Cannot publish temp range changed", exc);
+                return false;
+            }
+            return true;
+        };
     }
 
     private void supplyData() {
@@ -73,9 +127,14 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> setUIData(Optional.empty()));
                 findAndSetSmokingHouseIp();
             }
+
+            final Intent in = new Intent("com.an.sms.xxxxxxx");
+            final Bundle extras = new Bundle();
+            extras.putString("com.an.sms.xxxxxxx.xxxx", "YYYYYYYYYYYYYYYYYYYYYYY");
+            in.putExtras(extras);
+            getBaseContext().sendBroadcast(in);
         };
         executorService.scheduleWithFixedDelay(job, 0, 2, TimeUnit.SECONDS);
-
     }
 
     private void setUIData(final Optional<SensorsDTO> sensorsDTO) {
@@ -90,12 +149,12 @@ public class MainActivity extends AppCompatActivity {
                         Integer.parseInt(nbAlarmTo.getText().toString())
                 );
 
-                if (!tempRange.inRange(dto.getTemp1()) || !tempRange.inRange(dto.getTemp2())) {
-                    showTempOutOfRangeNotification(dto, !tempRange.inRange(dto.getTemp1()) ? dto.getTemp1() : dto.getTemp2());
-                }
-                if (dto.getDuration().toMinutes() > MAX_DURATION_MIN) {
-                    showDurationNotification(dto);
-                }
+//                if (!tempRange.inRange(dto.getTemp1()) || !tempRange.inRange(dto.getTemp2())) {
+//                    showTempOutOfRangeNotification(dto, !tempRange.inRange(dto.getTemp1()) ? dto.getTemp1() : dto.getTemp2());
+//                }
+//                if (dto.getDuration().toMinutes() > MAX_DURATION_MIN) {
+//                    showDurationNotification(dto);
+//                }
             } catch (final Exception e) {
                 Log.e("System.err", "Cannot verify temps", e);
             }
@@ -149,8 +208,21 @@ public class MainActivity extends AppCompatActivity {
         executorService.execute(job);
     }
 
-    private URL setSmokingHouseIp(final URL smokingHouseURL) {
+    URL setSmokingHouseIp(final URL smokingHouseURL) {
         this.smokingHouseIp = Optional.ofNullable(smokingHouseURL);
         return smokingHouseURL;
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        /*
+         * Step 4: Ensure to unregister the receiver when the activity is destroyed so that
+         * you don't face any memory leak issues in the app
+         */
+        if (urlBroadcastReceiver != null) {
+            unregisterReceiver(urlBroadcastReceiver);
+        }
+    }
+
 }
