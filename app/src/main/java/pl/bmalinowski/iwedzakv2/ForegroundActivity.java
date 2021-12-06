@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import pl.bmalinowski.iwedzakv2.command.Command;
 import pl.bmalinowski.iwedzakv2.command.DebugChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.ReceivedPayloadCommand;
+import pl.bmalinowski.iwedzakv2.command.StopForegroundServiceCommand;
 import pl.bmalinowski.iwedzakv2.command.TempRangeChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.UrlChangedCommand;
 import pl.bmalinowski.iwedzakv2.model.NotificationDTO;
@@ -147,8 +148,16 @@ public class ForegroundActivity extends Service {
                 }
             }
         };
+        final BroadcastReceiver stopServiceBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+                stopForeground(true);
+                stopSelf();
+            }
+        };
         registerReceiver(tempRangeBroadcastReceiver, new IntentFilter(TempRangeChangedCommand.class.getName()));
         registerReceiver(debugBroadcastReceiver, new IntentFilter(DebugChangedCommand.class.getName()));
+        registerReceiver(stopServiceBroadcastReceiver, new IntentFilter(StopForegroundServiceCommand.class.getName()));
     }
 
     @Override

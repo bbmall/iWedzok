@@ -29,6 +29,7 @@ import java.util.Objects;
 import pl.bmalinowski.iwedzakv2.command.Command;
 import pl.bmalinowski.iwedzakv2.command.DebugChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.ReceivedPayloadCommand;
+import pl.bmalinowski.iwedzakv2.command.StopForegroundServiceCommand;
 import pl.bmalinowski.iwedzakv2.command.TempRangeChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.UrlChangedCommand;
 import pl.bmalinowski.iwedzakv2.model.Payload;
@@ -59,7 +60,21 @@ public class MainActivity extends AppCompatActivity {
                 .setOnCheckedChangeListener((t, checked) -> publish(new DebugChangedCommand(checked)));
         registerReceiver();
 
-        startForegroundService(new Intent(this, ForegroundActivity.class));
+        final Intent foregroundIntent = new Intent(this, ForegroundActivity.class);
+
+        ((SwitchCompat) findViewById(R.id.foregroundServiceSwitch))
+                .setOnCheckedChangeListener((t, checked) -> {
+                    runOnUiThread(() -> {
+                                if (checked) {
+                                    startForegroundService(foregroundIntent);
+                                    publish(new DebugChangedCommand(((SwitchCompat) findViewById(R.id.debugSwitch)).isChecked()));
+                                } else {
+                                    stopService(foregroundIntent);
+                                    publish(new StopForegroundServiceCommand(/*foregroundIntent.getIdentifier()*/));
+                                }
+                            }
+                    );
+                });
     }
 
     private void registerReceiver() {
@@ -147,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             txtDuration.setText("");
         }
     }
-    
+
     private URL handleSmokingHouseUrlChanged(final URL url) {
         final TextView txtIp = findViewById(R.id.txtIp);
         if (Objects.nonNull(url)) {
