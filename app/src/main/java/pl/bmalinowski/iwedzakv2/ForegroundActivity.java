@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import pl.bmalinowski.iwedzakv2.command.Command;
 import pl.bmalinowski.iwedzakv2.command.DebugChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.ReceivedPayloadCommand;
+import pl.bmalinowski.iwedzakv2.command.StopForegroundServiceCommand;
 import pl.bmalinowski.iwedzakv2.command.TempRangeChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.UrlChangedCommand;
 import pl.bmalinowski.iwedzakv2.model.NotificationDTO;
@@ -77,8 +78,15 @@ public class ForegroundActivity extends Service {
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
         super.onStartCommand(intent, flags, startId);
-        registerReceiver();
-        fetchData();
+        if (intent.getAction().equals(StopForegroundServiceCommand.class.getName())) {
+            stopForeground(true);
+            stopSelfResult(startId);
+            stopSelf();
+        } else {
+            handleDebugChanged(intent.getExtras().getBoolean("debug", false));
+            registerReceiver();
+            fetchData();
+        }
         return START_STICKY;
     }
 

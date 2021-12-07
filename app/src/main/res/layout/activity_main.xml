@@ -108,7 +108,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="4dp"
-        android:text="No connection"
+        android:text="Nieaktywny"
         android:textColor="#7A7A7A"
         android:textSize="20sp"
         app:layout_constraintStart_toEndOf="@+id/lblIp"
@@ -136,8 +136,8 @@
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/debugSwitch"
-        android:layout_width="140dp"
-        android:layout_height="46dp"
+        android:layout_width="143dp"
+        android:layout_height="54dp"
         android:text="Debug"
         android:textColor="#7A7A7A"
         android:textSize="24sp"
@@ -147,6 +147,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.515" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/foregroundServiceSwitch"
+        android:layout_width="179dp"
+        android:layout_height="54dp"
+        android:text="Aktywny"
+        android:textColor="#7A7A7A"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.146"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.717" />
 
     <EditText
         android:id="@+id/nbAlarmFrom"
