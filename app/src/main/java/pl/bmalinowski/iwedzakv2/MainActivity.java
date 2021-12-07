@@ -66,15 +66,38 @@ public class MainActivity extends AppCompatActivity {
                 .setOnCheckedChangeListener((t, checked) -> {
                     runOnUiThread(() -> {
                                 if (checked) {
-                                    startForegroundService(foregroundIntent);
-                                    publish(new DebugChangedCommand(((SwitchCompat) findViewById(R.id.debugSwitch)).isChecked()));
+                                    startForegroundService(ForegroundActivity.class);
                                 } else {
-                                    stopService(foregroundIntent);
-                                    publish(new StopForegroundServiceCommand(/*foregroundIntent.getIdentifier()*/));
+                                    stopForegroundService(ForegroundActivity.class);
                                 }
                             }
                     );
                 });
+    }
+
+    private boolean isDebug() {
+        return ((SwitchCompat) findViewById(R.id.debugSwitch)).isChecked();
+    }
+
+    private boolean isForegroundServiceActive() {
+        return ((SwitchCompat) findViewById(R.id.foregroundServiceSwitch)).isChecked();
+    }
+
+    private void startForegroundService(final Class<?> activityClass) {
+        final Intent startIntent = new Intent(MainActivity.this, activityClass);
+        startIntent.setAction("STARTFOREGROUND_ACTION");
+        startIntent.putExtra("debug", isDebug());
+        startForegroundService(startIntent);
+    }
+
+    private void stopForegroundService(final Class<?> activityClass) {
+        final Intent stopIntent = new Intent(MainActivity.this, activityClass);
+        stopIntent.setAction(StopForegroundServiceCommand.class.getName());
+        startService(stopIntent);
+        runOnUiThread(() -> {
+            handleSmokingHouseUrlChanged(null);
+            handlePayloadReceived(null);
+        });
     }
 
     private void registerReceiver() {
@@ -172,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
             txtIp.setText(Html.fromHtml(link, Html.FROM_HTML_MODE_COMPACT));
         } else {
             txtIp.setClickable(false);
-            txtIp.setText("No connection");
+            txtIp.setText(isForegroundServiceActive() ? "Nieaktywny" : "Brak połączenia");
         }
         return url;
     }

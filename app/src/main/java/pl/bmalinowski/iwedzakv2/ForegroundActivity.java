@@ -78,8 +78,15 @@ public class ForegroundActivity extends Service {
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
         super.onStartCommand(intent, flags, startId);
-        registerReceiver();
-        fetchData();
+        if (intent.getAction().equals(StopForegroundServiceCommand.class.getName())) {
+            stopForeground(true);
+            stopSelfResult(startId);
+            stopSelf();
+        } else {
+            handleDebugChanged(intent.getExtras().getBoolean("debug", false));
+            registerReceiver();
+            fetchData();
+        }
         return START_STICKY;
     }
 
@@ -148,16 +155,8 @@ public class ForegroundActivity extends Service {
                 }
             }
         };
-        final BroadcastReceiver stopServiceBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(final Context context, final Intent intent) {
-                stopForeground(true);
-                stopSelf();
-            }
-        };
         registerReceiver(tempRangeBroadcastReceiver, new IntentFilter(TempRangeChangedCommand.class.getName()));
         registerReceiver(debugBroadcastReceiver, new IntentFilter(DebugChangedCommand.class.getName()));
-        registerReceiver(stopServiceBroadcastReceiver, new IntentFilter(StopForegroundServiceCommand.class.getName()));
     }
 
     @Override
