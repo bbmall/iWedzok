@@ -109,7 +109,7 @@ public class ForegroundActivity extends Service {
                 findAndSetSmokingHouseIp();
             }
         };
-        executor.scheduleWithFixedDelay(job, 0, 5, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(job, 0, 1, TimeUnit.SECONDS);
     }
 
     private void findAndSetSmokingHouseIp() {
@@ -192,7 +192,7 @@ public class ForegroundActivity extends Service {
         final Bundle extras = new Bundle();
         extras.putString("json", writeValueAsString(command));
         in.putExtras(extras);
-        getBaseContext().sendBroadcast(in);
+        getApplicationContext().sendBroadcast(in);
     }
 
     private void showTempOutOfRangeNotification(final Integer temp) {

@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -29,7 +30,6 @@ import java.util.Objects;
 import pl.bmalinowski.iwedzakv2.command.Command;
 import pl.bmalinowski.iwedzakv2.command.DebugChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.ReceivedPayloadCommand;
-import pl.bmalinowski.iwedzakv2.command.StopForegroundServiceCommand;
 import pl.bmalinowski.iwedzakv2.command.TempRangeChangedCommand;
 import pl.bmalinowski.iwedzakv2.command.UrlChangedCommand;
 import pl.bmalinowski.iwedzakv2.model.Payload;
@@ -60,19 +60,19 @@ public class MainActivity extends AppCompatActivity {
                 .setOnCheckedChangeListener((t, checked) -> publish(new DebugChangedCommand(checked)));
         registerReceiver();
 
-        final Intent foregroundIntent = new Intent(this, ForegroundActivity.class);
-
-        ((SwitchCompat) findViewById(R.id.foregroundServiceSwitch))
-                .setOnCheckedChangeListener((t, checked) -> {
-                    runOnUiThread(() -> {
-                                if (checked) {
-                                    startForegroundService(ForegroundActivity.class);
-                                } else {
-                                    stopForegroundService(ForegroundActivity.class);
-                                }
-                            }
-                    );
-                });
+        startForegroundService(ForegroundActivity.class);
+//
+//        ((SwitchCompat) findViewById(R.id.foregroundServiceSwitch))
+//                .setOnCheckedChangeListener((t, checked) -> {
+//                    runOnUiThread(() -> {
+//                                if (checked) {
+//                                    startForegroundService(ForegroundActivity.class);
+//                                } else {
+//                                    stopForegroundService(ForegroundActivity.class);
+//                                }
+//                            }
+//                    );
+//                });
     }
 
     private boolean isDebug() {
@@ -90,15 +90,15 @@ public class MainActivity extends AppCompatActivity {
         startForegroundService(startIntent);
     }
 
-    private void stopForegroundService(final Class<?> activityClass) {
-        final Intent stopIntent = new Intent(MainActivity.this, activityClass);
-        stopIntent.setAction(StopForegroundServiceCommand.class.getName());
-        startService(stopIntent);
-        runOnUiThread(() -> {
-            handleSmokingHouseUrlChanged(null);
-            handlePayloadReceived(null);
-        });
-    }
+//    private void stopForegroundService(final Class<?> activityClass) {
+//        final Intent stopIntent = new Intent(MainActivity.this, activityClass);
+//        stopIntent.setAction(StopForegroundServiceCommand.class.getName());
+//        startService(stopIntent);
+//        runOnUiThread(() -> {
+//            handleSmokingHouseUrlChanged(null);
+//            handlePayloadReceived(null);
+//        });
+//    }
 
     private void registerReceiver() {
         final BroadcastReceiver urlBroadcastReceiver = new BroadcastReceiver() {
@@ -125,14 +125,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        registerReceiver(urlBroadcastReceiver, new IntentFilter(UrlChangedCommand.class.getName()));
-        registerReceiver(sensorsBroadcastReceiver, new IntentFilter(ReceivedPayloadCommand.class.getName()));
+        registerCustomReceiver(urlBroadcastReceiver, new IntentFilter(UrlChangedCommand.class.getName()));
+        registerCustomReceiver(sensorsBroadcastReceiver, new IntentFilter(ReceivedPayloadCommand.class.getName()));
     }
 
-    @Override
-    public Intent registerReceiver(final BroadcastReceiver receiver, final IntentFilter filter) {
+    public void registerCustomReceiver(final BroadcastReceiver receiver, final IntentFilter filter) {
         receivers.add(receiver);
-        return super.registerReceiver(receiver, filter);
+
+        registerReceiver(receiver, filter);
     }
 
     private void publish(final Command command) {
@@ -155,19 +155,21 @@ public class MainActivity extends AppCompatActivity {
     private View.OnKeyListener getOnKeyListener() {
         return (view, keyCode, event) -> {
             try {
-                final EditText nbAlarmFrom = findViewById(R.id.nbAlarmTo);
-                final EditText nbAlarmTo = findViewById(R.id.nbAlarmFrom);
-                publish(new TempRangeChangedCommand(
-                                new TemperatureRange(
-                                        Integer.parseInt(nbAlarmFrom.getText().toString()),
-                                        Integer.parseInt(nbAlarmTo.getText().toString()))
-                        )
-                );
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    final EditText nbAlarmFrom = findViewById(R.id.nbAlarmFrom);
+                    final EditText nbAlarmTo = findViewById(R.id.nbAlarmTo);
+                    publish(new TempRangeChangedCommand(
+                                    new TemperatureRange(
+                                            Integer.parseInt(nbAlarmFrom.getText().toString()),
+                                            Integer.parseInt(nbAlarmTo.getText().toString()))
+                            )
+                    );
+                }
             } catch (final NumberFormatException exc) {
                 Log.e("System.err", "Cannot publish temp range changed", exc);
                 return false;
             }
-            return true;
+            return super.onKeyDown(keyCode, event);
         };
     }
 

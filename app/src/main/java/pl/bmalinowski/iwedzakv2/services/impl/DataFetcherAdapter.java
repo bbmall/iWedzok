@@ -28,13 +28,17 @@ class DataFetcherAdapter implements DataFetcherPort {
         final Optional<String> responseOpt = apiClient.getCurrentSmokingHouseState(URL);
         if (responseOpt.isPresent()) {
             final String response = responseOpt.get();
-            final int temp1 = extractNumberFor(TEMP_1_PREFIX, response);
+            final int temp1 = manageSensorError(extractNumberFor(TEMP_1_PREFIX, response));
             final int temp2 = extractNumberFor(TEMP_2_PREFIX, response);
             final Duration duration = extractDurationFor(TIME_PREFIX, response);
 
             return Optional.of(new Payload(temp1, temp2, duration));
         }
         return Optional.empty();
+    }
+
+    private static int manageSensorError(final int temp) {
+        return temp - 10;
     }
 
     private int extractNumberFor(final String prefix, final String text) {
